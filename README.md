@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TechPulse Japan
+
+Qiita、Hacker News、GitHubの公開データを横断し、日本と海外の技術トレンドを可視化するダッシュボードです。
+
+## Features
+
+- 24時間・7日・30日の期間切り替え
+- 媒体、カテゴリ、キーワードによる絞り込み
+- AI / ML、Web、Mobile、Data、DevOps、Securityへの自動分類
+- カテゴリ分布と媒体別モメンタムの可視化
+- 各媒体内で正規化した独自のPulse Score
+- 一部APIが停止しても利用可能なフォールトトレラント設計
+- 15分単位のサーバーキャッシュ
+
+## Data Sources
+
+- [Qiita API v2](https://qiita.com/api/v2/docs)
+- [Hacker News Search API](https://hn.algolia.com/api)
+- [GitHub REST API](https://docs.github.com/en/rest/search/search)
+
+媒体ごとに反応指標が異なるため、いいね・ポイント・スターを直接比較していません。各媒体の取得結果内で最大値を100として正規化し、コミュニティ内での相対的な勢いを `Pulse Score` として表示します。
+
+## Tech Stack
+
+- Next.js 16 / React 19
+- TypeScript
+- Tailwind CSS
+- Recharts
+- Lucide Icons
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`http://localhost:3000` を開いてください。APIトークンなしでも動作します。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+GITHUB_TOKEN=your_token
+QIITA_TOKEN=your_token
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+トークンを設定するとAPIのレート制限を緩和できます。
 
-## Learn More
+## Architecture
 
-To learn more about Next.js, take a look at the following resources:
+```text
+src/
+├── app/
+│   ├── api/trends/route.ts
+│   └── page.tsx
+├── components/dashboard.tsx
+└── lib/
+    ├── trends.ts
+    └── types.ts
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+外部APIのレスポンスはサーバー側で共通の `TrendItem` 型へ変換します。クライアントは媒体固有のレスポンス形式に依存せず、検索・集計・可視化だけを担当します。

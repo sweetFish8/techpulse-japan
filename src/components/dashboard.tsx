@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Activity, ArrowUpRight, GitBranch, Radio, RefreshCw, Search, Sparkles } from "lucide-react";
 import { Category, Source, TrendResponse } from "@/lib/types";
 import { getTrends } from "@/lib/trends";
@@ -23,17 +22,10 @@ export function Dashboard({ initialData }: { initialData: TrendResponse }) {
     `${item.title} ${item.description ?? ""} ${item.tags.join(" ")}`.toLowerCase().includes(query.toLowerCase())
   ), [data, source, category, query]);
 
-  const categoryData = categories.map((name) => ({ name: name.replace(" / ", "/"), value: filtered.filter((item) => item.category === name).length }));
-  const sourceData = sources.map((name) => {
-    const items = filtered.filter((item) => item.source === name);
-    return { name: name === "Hacker News" ? "HN" : name, momentum: Math.round(items.reduce((sum, item) => sum + item.score, 0) / Math.max(items.length, 1)) };
-  });
   const keywords = Object.entries(filtered.flatMap((item) => item.tags).reduce<Record<string, number>>((acc, tag) => {
     acc[tag] = (acc[tag] ?? 0) + 1;
     return acc;
   }, {})).sort((a, b) => b[1] - a[1]).slice(0, 8);
-  const topCategory = [...categoryData].sort((a, b) => b.value - a.value)[0];
-  const topSource = [...sourceData].sort((a, b) => b.momentum - a.momentum)[0];
 
   useEffect(() => {
     startTransition(async () => setData(await getTrends(7)));
@@ -66,18 +58,6 @@ export function Dashboard({ initialData }: { initialData: TrendResponse }) {
         <div className="segmented">{[1, 7, 30].map((value) => <button className={days === value ? "active" : ""} onClick={() => changeDays(value)} key={value}>{value === 1 ? "24時間" : `${value}日間`}</button>)}</div>
         <label className="search"><Search size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="技術、言語、キーワードを検索" /></label>
         <button className="refresh" onClick={() => changeDays(days)} aria-label="更新"><RefreshCw className={pending ? "spin" : ""} size={18} /></button>
-      </section>
-
-      <section className="stats-grid">
-        <article className="stat-card"><span>収集シグナル</span><strong>{filtered.length}</strong><small>3つの公開データソース</small></article>
-        <article className="stat-card"><span>トップカテゴリ</span><strong>{topCategory?.name ?? "-"}</strong><small>{topCategory?.value ?? 0} signals</small></article>
-        <article className="stat-card"><span>最高モメンタム</span><strong>{topSource?.name ?? "-"}</strong><small>媒体内スコア {topSource?.momentum ?? 0}</small></article>
-        <article className="stat-card status-card"><span>データステータス</span>{sources.map((name) => <small key={name}><i className={data.status[name]} />{name}</small>)}</article>
-      </section>
-
-      <section className="charts-grid">
-        <article className="panel"><p>DISTRIBUTION</p><h2>カテゴリ別シグナル</h2><ResponsiveContainer width="100%" height={250}><AreaChart data={categoryData}><defs><linearGradient id="area" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#55e6a5" stopOpacity={.45}/><stop offset="100%" stopColor="#55e6a5" stopOpacity={0}/></linearGradient></defs><CartesianGrid stroke="#23332f" vertical={false}/><XAxis dataKey="name" tick={{fill:"#8ba39b",fontSize:11}} axisLine={false} tickLine={false}/><YAxis hide/><Tooltip contentStyle={{background:"#101916",border:"1px solid #294038",borderRadius:12}}/><Area dataKey="value" stroke="#55e6a5" strokeWidth={3} fill="url(#area)" /></AreaChart></ResponsiveContainer></article>
-        <article className="panel"><p>SOURCE PULSE</p><h2>媒体別モメンタム</h2><ResponsiveContainer width="100%" height={250}><BarChart data={sourceData}><CartesianGrid stroke="#23332f" vertical={false}/><XAxis dataKey="name" tick={{fill:"#8ba39b"}} axisLine={false} tickLine={false}/><YAxis hide/><Tooltip contentStyle={{background:"#101916",border:"1px solid #294038",borderRadius:12}}/><Bar dataKey="momentum" fill="#ffb454" radius={[8,8,0,0]} /></BarChart></ResponsiveContainer></article>
       </section>
 
       <section className="content-grid">

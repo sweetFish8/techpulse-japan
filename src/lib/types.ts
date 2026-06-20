@@ -1,5 +1,13 @@
 export type Source = "Qiita" | "Hacker News" | "GitHub";
-export type Category = "AI / ML" | "Web" | "Mobile" | "Data" | "DevOps" | "Security" | "Other";
+export type Category =
+  | "AI / ML"
+  | "Web"
+  | "Mobile"
+  | "Data"
+  | "DevOps"
+  | "Security"
+  | "Programming"
+  | "Developer Tools";
 
 export type TrendItem = {
   id: string;

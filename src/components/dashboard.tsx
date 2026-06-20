@@ -7,7 +7,7 @@ import { Category, Source, TrendResponse } from "@/lib/types";
 import { getTrends } from "@/lib/trends";
 
 const sources: Source[] = ["Qiita", "Hacker News", "GitHub"];
-const categories: Category[] = ["AI / ML", "Web", "Mobile", "Data", "DevOps", "Security", "Other"];
+const categories: Category[] = ["AI / ML", "Web", "Mobile", "Data", "DevOps", "Security", "Programming", "Developer Tools"];
 
 export function Dashboard({ initialData }: { initialData: TrendResponse }) {
   const [data, setData] = useState(initialData);

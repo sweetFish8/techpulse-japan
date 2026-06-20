@@ -38,9 +38,7 @@ function normalize(items: Omit<TrendItem, "score">[]): TrendItem[] {
 
 async function fetchQiita(days: number): Promise<Omit<TrendItem, "score">[]> {
   const since = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
-  const headers: HeadersInit = {};
-  if (process.env.QIITA_TOKEN) headers.Authorization = `Bearer ${process.env.QIITA_TOKEN}`;
-  const response = await fetch(`https://qiita.com/api/v2/items?page=1&per_page=10&query=created%3A%3E%3D${since}+stocks%3A%3E%3D1`, { headers, next: { revalidate: 900 }, signal: AbortSignal.timeout(7000) });
+  const response = await fetch(`https://qiita.com/api/v2/items?page=1&per_page=10&query=created%3A%3E%3D${since}+stocks%3A%3E%3D1`, { signal: AbortSignal.timeout(7000) });
   if (!response.ok) throw new Error(`Qiita: ${response.status}`);
   const data = await response.json();
   return data.map((item: QiitaItem) => {
@@ -51,7 +49,7 @@ async function fetchQiita(days: number): Promise<Omit<TrendItem, "score">[]> {
 
 async function fetchHackerNews(days: number): Promise<Omit<TrendItem, "score">[]> {
   const timestamp = Math.floor((Date.now() - days * 86400000) / 1000);
-  const response = await fetch(`https://hn.algolia.com/api/v1/search_by_date?tags=story&numericFilters=created_at_i%3E${timestamp},points%3E5&hitsPerPage=40`, { next: { revalidate: 900 }, signal: AbortSignal.timeout(7000) });
+  const response = await fetch(`https://hn.algolia.com/api/v1/search_by_date?tags=story&numericFilters=created_at_i%3E${timestamp},points%3E5&hitsPerPage=40`, { signal: AbortSignal.timeout(7000) });
   if (!response.ok) throw new Error(`Hacker News: ${response.status}`);
   const data = await response.json();
   return data.hits.map((item: HackerNewsItem) => ({ id: `hn-${item.objectID}`, source: "Hacker News" as Source, title: item.title, url: item.url || `https://news.ycombinator.com/item?id=${item.objectID}`, author: item.author, publishedAt: item.created_at, rawScore: item.points || 0, category: classify(item.title), tags: [] }));
@@ -60,8 +58,7 @@ async function fetchHackerNews(days: number): Promise<Omit<TrendItem, "score">[]
 async function fetchGitHub(days: number): Promise<Omit<TrendItem, "score">[]> {
   const since = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
   const headers: HeadersInit = { Accept: "application/vnd.github+json" };
-  if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
-  const response = await fetch(`https://api.github.com/search/repositories?q=created:%3E=${since}+stars:%3E5&sort=stars&order=desc&per_page=40`, { headers, next: { revalidate: 900 }, signal: AbortSignal.timeout(7000) });
+  const response = await fetch(`https://api.github.com/search/repositories?q=created:%3E=${since}+stars:%3E5&sort=stars&order=desc&per_page=40`, { headers, signal: AbortSignal.timeout(7000) });
   if (!response.ok) throw new Error(`GitHub: ${response.status}`);
   const data = await response.json();
   return data.items.map((item: GitHubItem) => {

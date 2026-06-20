@@ -1,8 +1,13 @@
 import { Dashboard } from "@/components/dashboard";
-import { getTrends } from "@/lib/trends";
+import { TrendResponse } from "@/lib/types";
 
-export const revalidate = 900;
+const initialData: TrendResponse = {
+  items: [],
+  generatedAt: "",
+  days: 7,
+  status: { Qiita: "error", "Hacker News": "error", GitHub: "error" },
+};
 
-export default async function Home() {
-  return <Dashboard initialData={await getTrends(7)} />;
+export default function Home() {
+  return <Dashboard initialData={initialData} />;
 }

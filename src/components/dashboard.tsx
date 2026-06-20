@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Activity, ArrowUpRight, GitBranch, Radio, RefreshCw, Search, Sparkles } from "lucide-react";
 import { Category, Source, TrendResponse } from "@/lib/types";
+import { getTrends } from "@/lib/trends";
 
 const sources: Source[] = ["Qiita", "Hacker News", "GitHub"];
 const categories: Category[] = ["AI / ML", "Web", "Mobile", "Data", "DevOps", "Security", "Other"];
@@ -34,11 +35,14 @@ export function Dashboard({ initialData }: { initialData: TrendResponse }) {
   const topCategory = [...categoryData].sort((a, b) => b.value - a.value)[0];
   const topSource = [...sourceData].sort((a, b) => b.momentum - a.momentum)[0];
 
+  useEffect(() => {
+    startTransition(async () => setData(await getTrends(7)));
+  }, []);
+
   function changeDays(next: number) {
     setDays(next);
     startTransition(async () => {
-      const response = await fetch(`/api/trends?days=${next}`);
-      setData(await response.json());
+      setData(await getTrends(next));
     });
   }
 
@@ -55,7 +59,7 @@ export function Dashboard({ initialData }: { initialData: TrendResponse }) {
           <h1>技術の「今」を、<br /><em>ひとつの視点</em>で。</h1>
           <p className="lead">Qiita、Hacker News、GitHubの公開データを横断。日本と世界で動き始めた技術を、独自スコアで可視化します。</p>
         </div>
-        <div className="hero-orbit"><div className="orbit ring-one" /><div className="orbit ring-two" /><div className="pulse-core"><Sparkles /><strong>{data.items.length}</strong><span>SIGNALS</span></div></div>
+        <div className="hero-orbit"><div className="orbit ring-one" /><div className="orbit ring-two" /><div className="pulse-core"><Sparkles /><strong>{pending && !data.items.length ? "..." : data.items.length}</strong><span>SIGNALS</span></div></div>
       </section>
 
       <section className="controls">
